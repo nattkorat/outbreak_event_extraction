@@ -1,6 +1,7 @@
 import re
 from bs4 import BeautifulSoup
 import justext
+import unicodedata
 
 class HtmlCleaner:
     """
@@ -104,7 +105,7 @@ class TextCleaner():
     @staticmethod
     def clean_text(text_content: str) -> str:
         """
-        Cleans the provided plain text content by removing unnecessary symbols.
+        Cleans the provided plain text content by removing unnecessary symbols for thai.
 
         Args:
             text_content (str): The plain text content to be cleaned.
@@ -114,9 +115,28 @@ class TextCleaner():
         """
         
         # Remove unwanted characters and symbols
-        cleaned_text = ''.join(
-            char for char in text_content
-            if char.isalnum() or char.isspace() or char in ['.', ',', '!', '?', '-', '_', "'"]
-        )
+        allowed_punct = {'.', ',', '!', '?', '-', '_', "'", '“', '”', '‘', '’', '…', 'ๆ', 'ฯ'}
+        cleaned_text = []
+
+        for char in text_content:
+            cat = unicodedata.category(char)
+            if (
+                cat.startswith('L')   # Letter (Lu, Ll, Lt, Lm, Lo)
+                or cat.startswith('M')  # Mark (Mn, Mc, Me): e.g., Thai tone/vowel marks
+                or cat.startswith('N')  # Number
+                or char.isspace()
+                or char in allowed_punct
+            ):
+                cleaned_text.append(char)
+
         # Normalize whitespace
-        return ' '.join(cleaned_text.split())
+        return ' '.join(''.join(cleaned_text).split())
+
+if __name__ == '__main__':
+    
+    # test clean text 
+    text = "[โรคลึกลับระบาดเร็ว ป่วยยกหมู่บ้าน 500 คน อัฟกาฯ เร่งหาต้นตอโรค]"
+    
+    print("Original Text:", text)
+    cleaned_text = TextCleaner.clean_text(text)
+    print("Cleaned Text:", cleaned_text)
