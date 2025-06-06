@@ -1,0 +1,12 @@
+
+# env
+.env
+
+# datasets
+datasets/
+
+# system ignore
+.DS_Store
+# Python cache
+__pycache__/
+
