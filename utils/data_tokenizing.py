@@ -24,7 +24,7 @@ def count_length(tokenizer, text: str) -> int:
         int: The number of tokens in the text.
     """
     tokens = tokenizer.encode_plus(text, 
-                                   add_special_tokens=False, 
+                                   add_special_tokens=True, 
                                    return_tensors='pt')
     return tokens['input_ids'].shape[1]  # Return the number of tokens
 
