@@ -1,6 +1,14 @@
 """
 Prompt generation utilities for feeding with the LLM.
 """
+import os
+
+ZERO_SHOT_EVENT_TEMPLATE = None
+
+prompt_path = os.path.join(os.path.dirname(__file__), 'prompt_templates')
+
+with open(f'{prompt_path}/zero_shot_event_prompt.txt', 'r', encoding='utf-8') as file:
+    ZERO_SHOT_EVENT_TEMPLATE = file.read()
 
 def classification_prompt_zero_shot(text: str, target_category: list):
     """
@@ -16,17 +24,35 @@ def classification_prompt_zero_shot(text: str, target_category: list):
     
     categories = ', '.join(target_category)
     
-    prompt = f"""Classify the following text into one of these categories: [{categories}]
-        Text: {text}
+    prompt = f"""Classify the following article into one of these categories: [{categories}], and provide reasoning for your classification.
+
+        Expected output format (json):
+        Category: <category_name>
+        Confindence: <confidence_score>
+        Reasoning: <reasoning for the classification>
+        
+        Article:\n\n\t {text}
                         
-        Category: """
+        Category: 
+        Confidence:
+        Reasoning:"""
     
     return prompt.strip()
 
-if __name__ == "__main__":
-    # Example usage
-    example_text = "This is a sample text that needs to be classified."
-    example_categories = ["outbreak", "health promotion", "case report", "none health topic"]
-    
-    prompt = classification_prompt(example_text, example_categories)
-    print(prompt)
+def event_extraction_prompt_zero_shot(
+        article: str, 
+        prompt_template: str = ZERO_SHOT_EVENT_TEMPLATE
+    ) -> str:
+    """
+    Generates a prompt for extracting events from the given text.
+
+    Args:
+        text (str): The text from which to extract events.
+
+    Returns:
+        str: The formatted prompt for event extraction.
+    """
+    prompt = prompt_template.replace("<article>", article).strip()
+    return prompt
+
+
