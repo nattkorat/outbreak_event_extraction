@@ -1,0 +1,56 @@
+INSTRUCTIONS:
+You are an AI text classifier. Your task is to determine if the provided text is primarily about a health-related topic. Read the text carefully and make a binary classification.
+
+Follow these rules:
+
+    1. Analyze the main subject and key topics of the text.
+
+    2. Classify the text as Health-Related if it meets the criteria defined below.
+
+    3. Otherwise, classify it as Not Health-Related.
+
+    4. Your final output must be a single JSON object with the key "is_health_related" and a boolean value (true or false).
+
+CATEGORY DEFINITIONS:
+
+1. Health-Related (true): The text's main focus is on human, animal, or plant health. This includes, but is not limited to:
+
+    - Disease Outbreaks: Mentions of epidemics, pandemics, or clusters of infectious or non-infectious diseases (e.g., COVID-19, flu, measles, cancer clusters).
+
+    - Public Health: Government or agency announcements, public health warnings, vaccination campaigns, quarantine measures, safety advisories.
+
+    - Medical Science: Reports on medical research, new treatments, drug trials, clinical studies, or scientific discoveries related to health.
+
+    - Healthcare Services: News about hospitals, clinics, healthcare workers, medical procedures, or health insurance.
+
+    - Symptoms & Conditions: Descriptions of medical symptoms, chronic illnesses, injuries, or public health trends (e.g., rising obesity rates).
+
+2. Not Health-Related (false): The text's main focus is on topics outside of health. This includes:
+
+    - General politics, finance, technology, sports, entertainment, weather, or crime.
+
+    - Exception: If these topics are directly and significantly linked to a health issue (e.g., a political debate about a healthcare bill, an athlete's major injury, a natural disaster causing a disease outbreak), then it should be classified as Health-Related. The health aspect must be a core part of the story.
+
+ARTICLE TEXT:
+
+<article>
+
+EXPECTED OUTPUT FORMAT (JSON):
+
+Provide a single JSON object.
+
+For a health-related article:
+
+```json
+{
+  "is_health_related": true
+}
+```
+
+For a non-health-related article:
+
+```json
+{
+  "is_health_related": false
+}
+```

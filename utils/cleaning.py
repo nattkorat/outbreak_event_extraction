@@ -98,9 +98,21 @@ class TextCleaner():
     """
     A class to clean plain text content by removing unnecessary special characters and symbol.
     """
+    
+    @staticmethod
+    def clean_noisy_content(text_content: str) -> str:
+        """Clean content field in a dictionary by removing shortcodes and HTML tags."""
+        # Remove shortcodes like [expander_maker ...] and [/expander_maker]
+        text_content = re.sub(r'\[/?\w+.*?\]', '', text_content, flags=re.DOTALL)
 
-    def __init__(self):
-        pass
+        # Remove HTML tags like <p>, <div>, etc.
+        text_content = re.sub(r'<[^>]+>', '', text_content, flags=re.DOTALL)
+
+        # Remove excessive newlines or spaces
+        text_content = re.sub(r'\n+', ' ', text_content)
+        text_content = text_content.strip()
+
+        return text_content
 
     @staticmethod
     def clean_text(text_content: str) -> str:
@@ -115,7 +127,24 @@ class TextCleaner():
         """
         
         # Remove unwanted characters and symbols
-        allowed_punct = {'.', ',', '!', '?', '-', '_', "'", '“', '”', '‘', '’', '…', 'ๆ', 'ฯ'}
+        allowed_punct = {
+            '.',
+            ',',
+            '!',
+            '?',
+            '-',
+            '_',
+            "'",
+            '“',
+            '”',
+            '‘',
+            '’',
+            '…',
+            'ๆ',
+            'ฯ',
+            '៕​',
+            '​៖',
+        }
         cleaned_text = []
 
         for char in text_content:

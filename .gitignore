@@ -4,9 +4,32 @@
 
 # datasets
 datasets/
+data/
 
 # system ignore
 .DS_Store
 # Python cache
 __pycache__/
 
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+# Python virtual environment
+venv/
+# PyCharm project files
+.idea/
+# VS Code workspace settings
+.vscode/
+# Pytest cache
+.pytest_cache/
+# Coverage reports
+.coverage
+# Logs
+logs/
+# Temporary files
+*.tmp
+# Backup files
+*.bak
+# Compiled Python files
+*.pyc
+# Cython compiled files
+*.so
