@@ -3,12 +3,35 @@ Prompt generation utilities for feeding with the LLM.
 """
 import os
 
+ZERO_SHOT_CLSSION_TEMPLATE = None
 ZERO_SHOT_EVENT_TEMPLATE = None
 
 prompt_path = os.path.join(os.path.dirname(__file__), 'prompt_templates')
 
+with open(f'{prompt_path}/zero_shot_bin_cls_prompt.txt', 'r', encoding='utf-8') as file:
+    ZERO_SHOT_CLSSION_TEMPLATE = file.read()
+
 with open(f'{prompt_path}/zero_shot_event_prompt.txt', 'r', encoding='utf-8') as file:
     ZERO_SHOT_EVENT_TEMPLATE = file.read()
+
+def binary_classificaition_prompt_zero_shot(
+        article: str,
+        prompt_template: str = ZERO_SHOT_CLSSION_TEMPLATE
+    ) -> str:
+    """
+    Generates a prompt for binary classification of the given article.
+
+    Args:
+        article (str): The article to be classified.
+        prompt_template (str): The template for the classification prompt.
+
+    Returns:
+        str: The formatted prompt for binary classification.
+    """
+    
+    prompt = prompt_template.replace("<article>", article).strip()
+    return prompt
+
 
 def classification_prompt_zero_shot(text: str, target_category: list):
     """
