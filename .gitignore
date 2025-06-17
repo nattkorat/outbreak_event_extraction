@@ -15,6 +15,7 @@ __pycache__/
 .ipynb_checkpoints/
 # Python virtual environment
 venv/
+.venv/
 # PyCharm project files
 .idea/
 # VS Code workspace settings
