@@ -4,63 +4,130 @@
 import re
 import json
 
-def json_string_response_parser(response):
-    """Parses a JSON string response and returns a dictionary or list.
+def json_string_response_parser(text: str) -> dict:
+    """
+    Extract the first valid JSON object or array from a block of text.
 
     Args:
-        response (str): The response possibly containing JSON.
+        text (str): Input text containing a JSON structure.
 
     Returns:
         dict or list: Parsed JSON data.
     """
+    def find_json_bounds(s: str):
+        stack = []
+        start = None
+        for i, c in enumerate(s):
+            if c == '{':
+                if start is None:
+                    start = i
+                stack.append(c)
+            elif c == '}':
+                if stack:
+                    stack.pop()
+                    if not stack:
+                        return start, i + 1
+        return None, None
+
+    # Remove newlines and redundant spaces
+    compact_text = re.sub(r'\s+', ' ', text)
+
+    start, end = find_json_bounds(compact_text)
+    if start is None or end is None:
+        raise ValueError("No complete JSON object found.")
+
+    json_str = compact_text[start:end]
+
     try:
-        # Try to extract JSON from a ```json fenced code block
-        match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
-        if match:
-            json_str = match.group(1).strip()
-        else:
-            # Fallback: Try to extract any {...} or [...] block (the first one only)
-            match = re.search(r'({.*?}|\[.*?\])', response, re.DOTALL)
-            if not match:
-                raise ValueError("No JSON found in the response.")
-            json_str = match.group(1).strip()
-
-        # Try to parse as JSON
         return json.loads(json_str)
-
-    except Exception as e:
-        raise ValueError(f"Failed to parse JSON string: {e}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Found a possible JSON block but failed to parse: {e}")
 
 
 if __name__ == "__main__":
     # Example usage
-    response = '''```json
+    response = '''After carefully reading the news article, I have extracted the relevant information for each event type. Here is the output in JSON format:
+
 {
-  "Infect": [],
-  "Spread": [],
-  "Symptom": [],
-  "Prevent": [
+  "Infect": [
     {
-      "agent": "โรงงานผลิตอาหารสัตว์",
-      "disease": "อันตรายที่อาจก่อให้เกิดการเจ็บป่วยหรือบาดเจ็บ",
-      "means": "พัฒนาแผนความปลอดภัยด้านอาหารเพื่อป้องกันและลดอันตรายที่อาจก่อให้เกิดการเจ็บป่วยหรือบาดเจ็บให้เหลือน้อยที่สุดอย่างมีนัยสำคัญสำหรับคนและสัตว์",
-      "information-source": "FDA",
-      "target": "คนและสัตว์",
-      "effectiveness": "Not Mentioned"
+      "infected": "កូនជាតិភាគតិច",
+      "disease": "ជំងឺរលាក​សួត",
+      "place": "ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
+      "time": "Not Mentioned",
+      "value": "1,000 នាក់",
+      "information-source": "មណ្ឌលភាពយន្ត"
     },
     {
-      "agent": "โรงงานอาหารสัตว์",
-      "disease": "อันตรายด้านความปลอดภัยของอาหารที่อาจเกิดขึ้น",
-      "means": "ระบุการควบคุมเชิงป้องกันตามความเสี่ยงเพื่อป้องกันหรือลดอันตรายเหล่านั้น และสร้างและดำเนินการตามแผนเพื่อป้องกันไม่ให้อาหารสัตว์ที่ไม่ปลอดภัยเข้าสู่ตลาด",
-      "information-source": "FDA",
-      "target": "อาหารสัตว์",
-      "effectiveness": "Not Mentioned"
+      "infected": "គ្រូពេទ្យសាកលវិទ្យាល័យ",
+      "disease": "ជំងឺរលាក​សួត",
+      "place": "សាកលវិទ្យាល័យភ្នំពេញ",
+      "time": "Not Mentioned",
+      "value": "500 នាក់",
+      "information-source": "មណ្ឌលភាពយន្ត"
     }
   ],
-  "Control": [],
-  "Cure": [],
-  "Death": []
+  "Spread": [
+    {
+      "population": "ប្រជាជន​ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
+      "disease": "ជំងឺរលាក​សួត",
+      "place": "ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
+      "time": "ថ្ងៃ​ទី 15 ខែ ​មករា​ឆ្នាំ 2023",
+      "value": "10,000 នាក់",
+      "information-source": "មណ្ឌលភាពយន្ត"
+    }
+  ],
+  "Symptom": [
+    {
+      "person": "គ្រូពេទ្យសាកលវិទ្យាល័យ",
+      "symptom": "បន្ថយចំណាត់ហោយទាមរក្សា",
+      "disease": "ជំងឺរលាក​សួត",
+      "place": "សាកលវិទ្យាល័យភ្នំពេញ",
+      "time": "ថ្ងៃ​ទី 10 ខែ ​មករា​ឆ្នាំ 2023",
+      "duration": "5 សប្តាហ៍"
+    }
+  ],
+  "Prevent": [
+    {
+      "agent": "ព្រះរាជច្បាប់ក្លារី",
+      "disease": "ជំងឺរលាក​សួត",
+      "means": "បញ្ហា វិធីយុទ្ធនាំ",
+      "information-source": "ព្រះរាជច្បាប់ក្លារី"
+    }
+  ],
+  "Control": [
+    {
+      "authority": "សមាគមប្រឹក្សា​អន្តរជាតិ​រួមទាំង ​ព្រះរាជច្បាប់​ក្លារី",
+      "disease": "ជំងឺរលាក​សួត",
+      "means": "អារម្មណ៍ ហេដ្ឋា",
+      "place": "ភ្នំពេញ",
+      "time": "ថ្ងៃ​ទី 20 ខែ ​មករា​ឆ្នាំ 2023",
+      "information-source": "សារធាតុអន្តរជាតិ"
+    }
+  ],
+  "Cure": [
+    {
+      "cured": "គ្រូពេទ្យសាកលវិទ្យាល័យ",
+      "disease": "ជំងឺរលាក​សួត",
+      "means": "គ្រុន",
+      "place": "សាកលវិទ្យាល័យភ្នំពេញ",
+      "time": "ថ្ងៃ​ទី 25 ខែ ​មករា​ឆ្នាំ 2023",
+      "value": "500 នាក់",
+      "information-source": "សារធាតុអន្តរជាតិ"
+    }
+  ],
+  "Death": [
+    {
+      "dead": "មនុស្សដូចជា​កូន​ជាតិភាគតិច",
+      "disease": "ជំងឺរលាក​សួត",
+      "place": "ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
+      "time": "ថ្ងៃ​ទី 20 ខែ ​មករា​ឆ្នាំ 2023",
+      "value": "100 នាក់",
+      "information-source": "មណ្ឌលភាពយន្ត"
+    }
+  ]
 }
+
 ```'''
     parsed_response = json_string_response_parser(response)
     print(parsed_response)  # Output: {'key': 'value', 'number': 42}
