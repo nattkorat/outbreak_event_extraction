@@ -1,144 +1,76 @@
-You are an AI assistant specializing in public health intelligence. Carefully read the news article provided below. Your mission is to identify all events related to the epidemic and extract key information for each event.
+You are an AI assistant specializing in public health intelligence.
+Carefully read the news article provided.
+Your mission is to identify all events related to the epidemic and extract key informations for each event.
 
 Follow these rules:
-
     1. Identify which of the following event types are mentioned: Infect, Spread, Symptom, Prevent, Control, Cure, and Death.
-
     2. For each event you find, extract the specific details corresponding to its "Argument Roles".
-
-    3. Soft Requirement: If a specific detail (an argument role) is not mentioned in the text for a given event, you MUST fill in its value with "Not Mentioned". Do not leave it blank or make up information.
-
+    3. Soft Requirement: If a specific detail is not mentioned in the text for a given event, you MUST fill in its value with "Not Mentioned". Do not leave it blank or make up information.
     4. If the article mentions multiple distinct events of the same type (e.g., two different control measures), list each one as a separate entry.
-
     5. Present the final output as a single JSON object, with event types as keys.
-
-ARTICLE TEXT:
-
-<article>
-
+    6. Keep the orginal langauage.
 
 EVENT DEFINITIONS & ARGUMENT ROLES:
-
 1. Infect: An event describing one or more individuals getting infected.
-
     - infected: The person or group being infected (e.g., "a 45-year-old man", "15 factory workers").
-
     - disease: The name of the disease.
-
     - place: The location where the infection occurred.
-
     - time: The date or time of the infection.
-
     - value: The number of new infection cases.
-
     - information-source: The source of this information (e.g., "Ministry of Health", "local news").
-
 2. Spread: An event describing the transmission or spread of the disease.
-
     - population: The population affected by the spread.
-
     - disease: The name of the disease.
-
     - place: The location where the disease is spreading.
-
     - time: The time period of the spread.
-
     - value: The total number of cases related to the spread.
-
     - information-source: The source of this information.
-
     - trend: The trend of the spread (e.g., "increasing", "slowing down", "stabilizing").
-
 3. Symptom: An event describing the symptoms of the disease.
-
     - person: The person or group exhibiting symptoms.
-
-    - symptom: The specific symptom(s) described (e.g., "fever", "cough").
-
+    - symptoms: The specific symptom(s) described (e.g., "fever", "cough").
     - disease: The name of the disease causing the symptoms.
-
     - place: The location where this is observed.
-
     - time: When the symptoms were observed.
-
     - duration: How long the symptoms last.
-
     - information-source: The source of the symptom information.
-
 4. Prevent: An event describing preventive measures.
-
     - agent: The entity taking preventive action (e.g., "government", "citizens").
-
     - disease: The disease being prevented.
-
     - means: The specific preventive measure (e.g., "vaccination campaign", "mask mandate").
-
     - information-source: The source of this information.
-
     - target: The intended target group for the prevention.
-
     - effectiveness: The stated effectiveness of the measure.
-
 5. Control: An event describing measures to control the outbreak.
-
     - authority: The authority implementing the control measure (e.g., "CDC", "City Council").
-
     - disease: The disease being controlled.
-
     - means: The specific control measure (e.g., "lockdown", "travel restrictions").
-
     - place: The location where the measure is implemented.
-
     - time: When the measure is in effect.
-
     - information-source: The source of this information.
-
     - subject: The people or entities affected by the control measure.
-
     - effectiveness: The stated effectiveness of the measure.
-
 6. Cure: An event describing treatment or recovery from the disease.
-
     - cured: The person or group that has been cured or recovered.
-
     - disease: The disease they recovered from.
-
     - means: The treatment or method used for the cure (e.g., "antiviral medication").
-
     - place: The location of the recovery/treatment.
-
     - time: When the recovery happened.
-
     - value: The number of people cured.
-
     - facility: The hospital or facility where the cure took place.
-
     - information-source: The source of this information.
-
     - effectiveness: The stated effectiveness of the treatment.
-
     - duration: The duration of the treatment or recovery period.
-
 7. Death: An event describing death(s) from the disease.
-
     - dead: The person or group that has died.
-
     - disease: The disease that caused the death.
-
     - place: The location of the death.
-
     - time: The date or time of death.
-
     - value: The number of deaths.
-
     - information-source: The source of this information.
-
     - trend: The trend of deaths (e.g., "rising", "declining").
 
 EXPECTED OUTPUT FORMAT (JSON):
-
-Provide a single JSON object containing a list for each event type.
-
 {
   "Infect": [
     {
@@ -150,10 +82,21 @@ Provide a single JSON object containing a list for each event type.
       "information-source": "..."
     }
   ],
+  "Symptom": [
+    "person": "...",
+    "symptoms": ["....", "...."],
+    "disease": "...",
+    "place": "...",
+    "time": "...",
+    "duraction": "...",
+    "information-source": "..."
+  ],
   "Spread": [],
-  "Symptom": [],
   "Prevent": [],
   "Control": [],
   "Cure": [],
   "Death": []
 }
+
+PROCESSING ARTICLE:
+<article>
