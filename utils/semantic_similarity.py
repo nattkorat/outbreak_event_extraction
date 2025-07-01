@@ -2,6 +2,10 @@ from sacrebleu.metrics import BLEU
 from rouge_score import rouge_scorer
 from bleurt import score
 
+# global for BLEURT scorer
+# checkpoint = "pretrains/BLEURT-20"
+# bleurt_scorer = score.BleurtScorer(checkpoint)
+
 def calculate_bleu(reference, hypothesis):
     """
     Calculate BLEU score between a reference and a hypothesis.
@@ -41,8 +45,6 @@ def calculate_bleurt(reference, hypothesis):
     Returns:
         float: The BLEURT score.
     """
-    checkpoint = "pretrains/BLEURT-20"
-    bleurt_scorer = score.BleurtScorer(checkpoint)
     return bleurt_scorer.score(references=[reference], candidates=[hypothesis])[0]
 
 if __name__ == "__main__":
