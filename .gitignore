@@ -5,6 +5,7 @@
 # datasets
 datasets/
 data/
+pretrains/
 
 # system ignore
 .DS_Store
