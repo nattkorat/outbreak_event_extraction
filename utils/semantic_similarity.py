@@ -1,10 +1,23 @@
 from sacrebleu.metrics import BLEU
 from rouge_score import rouge_scorer
-from bleurt import score
+# from bleurt import score
 
 # global for BLEURT scorer
 # checkpoint = "pretrains/BLEURT-20"
 # bleurt_scorer = score.BleurtScorer(checkpoint)
+
+def stricty_compare(a, b):
+    """
+    Strictly compare two strings for equality.
+
+    Args:
+        a (str): First string.
+        b (str): Second string.
+
+    Returns:
+        bool: True if both strings are exactly the same, False otherwise.
+    """
+    return a.strip() == b.strip()
 
 def calculate_bleu(reference, hypothesis):
     """
@@ -18,7 +31,7 @@ def calculate_bleu(reference, hypothesis):
         float: The BLEU score.
     """
     bleu = BLEU(max_ngram_order=1, effective_order=True)
-    return bleu.sentence_score(hypothesis, [reference]).score
+    return bleu.sentence_score(hypothesis, [reference]).score / 100.0  # Normalize to [0, 1] range
 
 def calculate_rouge(reference, hypothesis):
     """
@@ -49,12 +62,12 @@ def calculate_bleurt(reference, hypothesis):
 
 if __name__ == "__main__":
     # Example usage
-    ref = "១០ នាក់"
-    hyp = "មនុស្ស ១០ នាក់"
+    ref = "virus"
+    hyp = "this virus"
     score_bleu = calculate_bleu(ref, hyp)
     score_rouge = calculate_rouge(ref, hyp)
-    score_bleurt = calculate_bleurt(ref, hyp)
+    # score_bleurt = calculate_bleurt(ref, hyp)
     
     print(f"BLEU score: {score_bleu:.2f}")
     print(f"ROUGE scores: {score_rouge:.2f}")
-    print(f"BLEURT score: {score_bleurt:.2f}") # Better for Khmer language here
+    # print(f"BLEURT score: {score_bleurt:.2f}") # Better for Khmer language here

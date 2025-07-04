@@ -1,66 +1,66 @@
-import argparse
-import json
-import time
-from utils import prompt, response_parser, evaluation, semantic_similarity
-from llms import gemini2_5
+from utils import evaluation, semantic_similarity
 from tabulate import tabulate
 from collections import defaultdict
 
 
-def run(test_data, few_shot_samples, threshold=0.5, sleep_time=5):
+def run(gold_data, pred_data, threshold=0.5, matching="strict"):
+    # Build ID-based lookup
+    gold_dict = {item["id"]: item["events"] for item in gold_data}
+    pred_dict = {item["id"]: item["events"] for item in pred_data}
+
+    common_ids = sorted(set(gold_dict.keys()) & set(pred_dict.keys()))
+    if not common_ids:
+        raise ValueError("No overlapping IDs between gold and prediction.")
+
     rows = []
-    
     sum_type_p = sum_type_r = sum_type_f1 = 0
     sum_trigger_p = sum_trigger_r = sum_trigger_f1 = 0
     sum_argument_p = sum_argument_r = sum_argument_f1 = 0
-    all_type_scores = defaultdict(lambda: {'tp': 0, 'fp': 0, 'fn': 0})
 
-    for i, example in enumerate(test_data):
-        print(f"\n[INFO] Processing article {i+1}/{len(test_data)}")
-        print(f"[INFO] Article : {example['text']}")
-        # Build prompt
-        prompt_text = prompt.event_extraction_prompt_few_shot(
-            article=example['text'],
-            samples=few_shot_samples
-        )
+    semantic_fn = semantic_similarity.stricty_compare 
+    if matching == "bleu":
+        semantic_fn = semantic_similarity.calculate_bleu
+    elif matching == "rouge":
+        semantic_fn = semantic_similarity.calculate_rouge
+    elif matching == "bleurt":
+        semantic_fn = semantic_similarity.calculate_bleurt
 
-        # Request LLM (with sleep)
-        llm_raw_response = gemini2_5.chat_with_gemini2_5(prompt_text)
-        time.sleep(sleep_time)
+    for idx, sample_id in enumerate(common_ids):
+        print(f"\n[INFO] Evaluating sample {idx+1}/{len(common_ids)} with ID: {sample_id}")
 
-        # Parse response to structured format
-        llm_response = response_parser.json_string_response_parser(llm_raw_response)
+        gold_events = gold_dict[sample_id]
+        pred_events = pred_dict[sample_id]
 
-        # Evaluate
-        gold = example['events']
-        pred = llm_response
+        # Type of event evaluation
+        type_score = evaluation.evaluate_event_types(gold_events, pred_events)
 
-        type_score = evaluation.evaluate_event_types(gold, pred)
+        # Trigger evaluation
         trigger_scores = evaluation.evaluate_event_triggers(
-            gold, pred,
-            semantic_fn=semantic_similarity.calculate_bleu,
-            threshold=threshold
-        )
-        argument_scores = evaluation.evaluate_event_arguments(
-            gold, pred,
-            semantic_fn=semantic_similarity.calculate_bleu,
+            gold_events, pred_events,
+            semantic_fn=semantic_fn,
             threshold=threshold
         )
 
-        # Average trigger scores across all event types
+        # Argument evaluation
+        argument_scores = evaluation.evaluate_event_arguments(
+            gold_events, pred_events,
+            semantic_fn=semantic_fn,
+            threshold=threshold
+        )
+
+        # Aggregate trigger scores
         trigger_tp = sum(s['tp'] for s in trigger_scores.values())
         trigger_fp = sum(s['fp'] for s in trigger_scores.values())
         trigger_fn = sum(s['fn'] for s in trigger_scores.values())
-
         trigger_precision = trigger_tp / (trigger_tp + trigger_fp + 1e-8)
         trigger_recall = trigger_tp / (trigger_tp + trigger_fn + 1e-8)
         trigger_f1 = 2 * trigger_precision * trigger_recall / (trigger_precision + trigger_recall + 1e-8)
 
-        # Average argument scores across all event types and roles
+        # Aggregate argument scores
         argument_tp = argument_fp = argument_fn = 0
-        for event_type, roles_list in argument_scores.items():
+        for roles_list in argument_scores.values():
             for role_scores in roles_list:
-                for role, s in role_scores.items():
+                for s in role_scores.values():
                     argument_tp += s['tp']
                     argument_fp += s['fp']
                     argument_fn += s['fn']
@@ -70,13 +70,13 @@ def run(test_data, few_shot_samples, threshold=0.5, sleep_time=5):
         argument_f1 = 2 * argument_precision * argument_recall / (argument_precision + argument_recall + 1e-8)
 
         row = [
-            i + 1,
+            sample_id,
             type_score['precision'], type_score['recall'], type_score['f1'],
             trigger_precision, trigger_recall, trigger_f1,
             argument_precision, argument_recall, argument_f1
         ]
         rows.append(row)
-        
+
         sum_type_p += type_score['precision']
         sum_type_r += type_score['recall']
         sum_type_f1 += type_score['f1']
@@ -87,19 +87,17 @@ def run(test_data, few_shot_samples, threshold=0.5, sleep_time=5):
         sum_argument_r += argument_recall
         sum_argument_f1 += argument_f1
 
-        # Print per-type trigger scores
         print("-- Trigger Evaluation by Type --")
         for t, s in trigger_scores.items():
             print(f"[{t}] P={s['precision']:.2f}, R={s['recall']:.2f}, F1={s['f1']:.2f}, TP={s['tp']}, FP={s['fp']}, FN={s['fn']}")
 
-        # Print per-type and per-role argument scores
         print("-- Argument Evaluation by Type and Role --")
         for t, roles_list in argument_scores.items():
             for role_scores in roles_list:
                 for role, s in role_scores.items():
                     print(f"[{t}::{role}] P={s['precision']:.2f}, R={s['recall']:.2f}, F1={s['f1']:.2f}, TP={s['tp']}, FP={s['fp']}, FN={s['fn']}")
 
-    # Display results as a table
+    # Print overall table
     headers = [
         "ID",
         "Type_P", "Type_R", "Type_F1",
@@ -108,33 +106,33 @@ def run(test_data, few_shot_samples, threshold=0.5, sleep_time=5):
     ]
     print("\n===== Evaluation Results =====")
     print(tabulate(rows, headers=headers, floatfmt=".2f"))
-    
-    n = len(test_data)
+
+    n = len(common_ids)
     print("\n===== Average Results =====")
-    print(tabulate([
-        [
-            "Avg",
-            sum_type_p / n, sum_type_r / n, sum_type_f1 / n,
-            sum_trigger_p / n, sum_trigger_r / n, sum_trigger_f1 / n,
-            sum_argument_p / n, sum_argument_r / n, sum_argument_f1 / n
-        ]
-    ], headers=headers, floatfmt=".2f"))
+    print(tabulate([[
+        "Avg",
+        sum_type_p / n, sum_type_r / n, sum_type_f1 / n,
+        sum_trigger_p / n, sum_trigger_r / n, sum_trigger_f1 / n,
+        sum_argument_p / n, sum_argument_r / n, sum_argument_f1 / n
+    ]], headers=headers, floatfmt=".2f"))
 
+if __name__ == '__main__':
+    import json
+    import argparse
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Evaluate event extraction from LLM output.")
-    parser.add_argument("--input", type=str, required=True, help="Path to test file (JSON)")
-    parser.add_argument("--sample", type=str, required=True, help="Path to few-shot template file (JSON)")
-    parser.add_argument("--threshold", type=float, default=0.5, help="Similarity threshold")
-    parser.add_argument("--sleep", type=int, default=5, help="Sleep time between LLM requests (in seconds)")
+    parser = argparse.ArgumentParser(description="Evaluate event extraction results.")
+    parser.add_argument("--gold", type=str, required=True, help="Path to gold data JSON file.")
+    parser.add_argument("--pred", type=str, required=True, help="Path to prediction data JSON file.")
+    parser.add_argument("--threshold", type=float, default=0.5, help="Semantic similarity threshold for matching.")
+    parser.add_argument("--matching", type=str, choices=["strict", "bleu", "rouge", "bleurt"], default="strict",
+                        help="Method for semantic matching.")
 
     args = parser.parse_args()
 
-    with open(args.input, 'r') as f:
-        test_data = json.load(f)
+    with open(args.gold, 'r') as f:
+        gold_data = json.load(f)
+    
+    with open(args.pred, 'r') as f:
+        pred_data = json.load(f)
 
-    with open(args.sample, 'r') as f:
-        few_shot_samples = json.load(f)
-
-    run(test_data, few_shot_samples, threshold=args.threshold, sleep_time=args.sleep)
+    run(gold_data, pred_data, threshold=args.threshold, matching=args.matching)

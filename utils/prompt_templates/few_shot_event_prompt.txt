@@ -1,5 +1,5 @@
 You are an AI assistant specializing in public health intelligence. Carefully read the news article provided below. Your mission is to identify all events related to the epidemic and extract key information for each event.
-Rule:
+RULES:
 - Identify a trigger word which of the following event types are mentioned: Infect, Spread, Symptom, Prevent, Control, Cure, and Death.
 - Trigger word is one word that MOST LIKELY manifests the event's occurrence.
 - For each event you find, extract the specific details corresponding to its "Argument Roles".

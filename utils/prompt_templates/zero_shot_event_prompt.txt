@@ -1,14 +1,13 @@
-You are an AI assistant specializing in public health intelligence.
-Carefully read the news article provided.
-Your mission is to identify all events related to the epidemic and extract key informations for each event.
+You are an AI assistant specializing in public health intelligence. Carefully read the news article provided below. Your mission is to identify all events related to the epidemic and extract key information for each event.
 
-Follow these rules:
-    1. Identify which of the following event types are mentioned: Infect, Spread, Symptom, Prevent, Control, Cure, and Death.
-    2. For each event you find, extract the specific details corresponding to its "Argument Roles".
-    3. Soft Requirement: If a specific detail is not mentioned in the text for a given event, you MUST fill in its value with "Not Mentioned". Do not leave it blank or make up information.
-    4. If the article mentions multiple distinct events of the same type (e.g., two different control measures), list each one as a separate entry.
-    5. Present the final output as a single JSON object, with event types as keys.
-    6. Keep the orginal langauage.
+RULES:
+- Identify a trigger word which of the following event types are mentioned: Infect, Spread, Symptom, Prevent, Control, Cure, and Death.
+- Trigger word is one word that MOST LIKELY manifests the event's occurrence.
+- For each event you find, extract the specific details corresponding to its "Argument Roles".
+- Requirement: If a specific detail (an argument role) is not mentioned in the text for a given event, you MUST not fill in.
+- If the article mentions multiple distinct events of the same type (e.g., two different control measures), list each one as a separate entry.
+- Present the final output as a single JSON object, with event types as keys.
+- Keep the orginal langauage
 
 EVENT DEFINITIONS & ARGUMENT ROLES:
 1. Infect: An event describing one or more individuals getting infected.
@@ -28,7 +27,7 @@ EVENT DEFINITIONS & ARGUMENT ROLES:
     - trend: The trend of the spread (e.g., "increasing", "slowing down", "stabilizing").
 3. Symptom: An event describing the symptoms of the disease.
     - person: The person or group exhibiting symptoms.
-    - symptoms: The specific symptom(s) described (e.g., "fever", "cough").
+    - symptom: The specific symptom(s) described (e.g., "fever", "cough").
     - disease: The name of the disease causing the symptoms.
     - place: The location where this is observed.
     - time: When the symptoms were observed.
@@ -72,30 +71,26 @@ EVENT DEFINITIONS & ARGUMENT ROLES:
 
 EXPECTED OUTPUT FORMAT (JSON):
 {
-  "Infect": [
+  "Death": [
     {
-      "infected": "...",
-      "disease": "...",
-      "place": "...",
-      "time": "...",
-      "value": "...",
-      "information-source": "..."
+      "trigger": "...",
+      "arguments": {
+        "disease": "...",
+        "place": "...",
+        "trend": "..."
+      }
     }
   ],
-  "Symptom": [
-    "person": "...",
-    "symptoms": ["....", "...."],
-    "disease": "...",
-    "place": "...",
-    "time": "...",
-    "duraction": "...",
-    "information-source": "..."
-  ],
-  "Spread": [],
-  "Prevent": [],
-  "Control": [],
-  "Cure": [],
-  "Death": []
+  "Infect": [
+    {
+      "trigger": "...",
+      "arguments": {
+        "disease": "...",
+        "infected": "...",
+        "place": "..."
+      }
+    }
+  ]
 }
 
 PROCESSING ARTICLE:
