@@ -23,3 +23,9 @@ def chat_with_gemini2_5(text: str) -> str:
     )
     
     return response.text
+
+if __name__ == "__main__":
+    # Example usage
+    example_text = "What is the capital of France?"
+    response = chat_with_gemini2_5(example_text)
+    print(f"Response from Gemini 2.5: {response}")

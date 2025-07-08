@@ -3,6 +3,10 @@
 
 import re
 import json
+from colorama import Fore, Style, init
+
+# Initialize colorama for colored output
+init(autoreset=True)
 
 def json_string_response_parser(text: str) -> dict:
     """
@@ -30,18 +34,24 @@ def json_string_response_parser(text: str) -> dict:
         return None, None
 
     # Remove newlines and redundant spaces
-    compact_text = re.sub(r'\s+', ' ', text)
+    try:
+      compact_text = re.sub(r'\s+', ' ', text)
+    except Exception as e:
+        print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Failed to compact text: {e}")
+        compact_text = None, None
 
     start, end = find_json_bounds(compact_text)
     if start is None or end is None:
-        raise ValueError("No complete JSON object found.")
-
-    json_str = compact_text[start:end]
+        print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} No complete JSON object found.")
+        print(f"{Fore.YELLOW}[WARN]{Style.RESET_ALL} Text was: {text}")
+        json_str = "{}" # Fallback to empty JSON if parsing fails
+    else:
+      json_str = compact_text[start:end]
 
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Found a possible JSON block but failed to parse: {e}")
+        print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Found a possible JSON block but failed to parse: {e}")
 
 
 if __name__ == "__main__":
