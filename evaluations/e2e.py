@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Evaluate event extraction results.")
     parser.add_argument("--gold", type=str, required=True, help="Path to gold data JSON file.")
-    parser.add_argument("--pred", type=str, required=True, help="Path to prediction data JSON file.")
+    parser.add_argument("--pred", type=str, required=True, help="Path to prediction data JSON/JSONL file.")
     parser.add_argument("--threshold", type=float, default=0.5, help="Semantic similarity threshold for matching.")
     parser.add_argument("--matching", type=str, choices=["strict", "bleu", "rouge", "bleurt"], default="strict",
                         help="Method for semantic matching.")
@@ -132,7 +132,14 @@ if __name__ == '__main__':
     with open(args.gold, 'r') as f:
         gold_data = json.load(f)
     
-    with open(args.pred, 'r') as f:
-        pred_data = json.load(f)
+    if args.pred.endswith('.jsonl'):
+        # Load JSONL file
+        pred_data = []
+        with open(args.pred, 'r') as f:
+            for line in f:
+                pred_data.append(json.loads(line.strip()))
+    else:
+        with open(args.pred, 'r') as f:
+            pred_data = json.load(f)
 
     run(gold_data, pred_data, threshold=args.threshold, matching=args.matching)
