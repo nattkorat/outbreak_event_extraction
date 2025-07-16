@@ -74,7 +74,8 @@ if __name__ == '__main__':
         gemini2_5,
         llama4_maverik,
         qwen2_5_72b,
-        deepseekr1
+        deepseekr1,
+        typhoon
     )
 
     parser = argparse.ArgumentParser(description="Run event extraction inference.")
@@ -87,7 +88,8 @@ if __name__ == '__main__':
         "gemini",
         "llama4",
         "qwen2_5_72b",
-        "deepseekr1"
+        "deepseekr1",
+        "typhoon"
         ])
 
     args = parser.parse_args()
@@ -106,11 +108,12 @@ if __name__ == '__main__':
         "gemini": gemini2_5.chat_with_gemini2_5,
         "llama4": llama4_maverik.chat_with_llama4_maverik,
         "qwen2_5_72b": qwen2_5_72b.chat_with_qwen2_5_72b,
-        "deepseekr1": deepseekr1.chat_with_deepseekr1
+        "deepseekr1": deepseekr1.chat_with_deepseekr1,
+        "typhoon": typhoon.chat_with_typhoon
     }
 
     run_inference(
-        test_data=test_data[-2:],
+        test_data=test_data,
         model_fn=model_map[args.model],
         few_shot_samples=few_shot_samples,
         sleep_time=args.sleep_time,
