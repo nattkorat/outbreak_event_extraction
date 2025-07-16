@@ -35,3 +35,7 @@ logs/
 *.pyc
 # Cython compiled files
 *.so
+
+# Inference and training outputs
+outputs/
+logs/
