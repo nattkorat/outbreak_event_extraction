@@ -111,9 +111,20 @@ if __name__ == '__main__':
         "deepseekr1": deepseekr1.chat_with_deepseekr1,
         "typhoon": typhoon.chat_with_typhoon
     }
+    
+    # Try to check the output file first
+    strart_idx = 0
+    if os.path.exists("outputs"):
+        output_files = os.listdir("outputs")
+        if args.output_file in output_files:
+            with open(os.path.join("outputs", args.output_file), 'r') as f:
+                strart_idx = len(f.readlines())
+            print(f"[WARNING] Output file '{args.output_file}' already exists. Appending results.")
+        else:
+            print(f"[INFO] Creating new output file 'outputs/{args.output_file}'")
 
     run_inference(
-        test_data=test_data,
+        test_data=test_data[strart_idx:],
         model_fn=model_map[args.model],
         few_shot_samples=few_shot_samples,
         sleep_time=args.sleep_time,
