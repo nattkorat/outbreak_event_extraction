@@ -54,7 +54,7 @@ def run_trigger_classification(config, tokenizer):
 
     args = TrainingArguments(
         output_dir=f"{config['output_dir']}/trigger_cls",
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         num_train_epochs=config["num_train_epochs"],

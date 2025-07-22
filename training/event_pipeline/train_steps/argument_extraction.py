@@ -78,7 +78,7 @@ def run_argument_extraction(config, tokenizer):
 
     args = TrainingArguments(
         output_dir=f"{config['output_dir']}/arg_extraction",
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         num_train_epochs=config["num_train_epochs"],
