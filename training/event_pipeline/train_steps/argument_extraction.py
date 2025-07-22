@@ -88,23 +88,23 @@ def run_argument_extraction(config, tokenizer):
         logging_dir=f"{config['output_dir']}/logs"
     )
 
-    def compute_metrics(eval_preds):
-        preds = torch.argmax(torch.tensor(eval_preds.predictions), axis=2)
-        labels = eval_preds.label_ids
-        preds_clean, labels_clean = [], []
-        for p_seq, l_seq in zip(preds, labels):
-            p_tags, l_tags = [], []
-            for p, l in zip(p_seq, l_seq):
+    def compute_arg_metrics(eval_preds):
+        predictions, labels = eval_preds
+        preds = torch.argmax(torch.tensor(predictions), axis=2)
+        true_labels, true_preds = [], []
+        for pred, label in zip(preds, labels):
+            cur_labels, cur_preds = [], []
+            for p, l in zip(pred, label):
                 if l != -100:
-                    p_tags.append(id2label[p.item()])
-                    l_tags.append(id2label[l])
-            preds_clean.append(p_tags)
-            labels_clean.append(l_tags)
+                    cur_labels.append(id2label[l.item()])
+                    cur_preds.append(id2label[p.item()])
+            true_labels.append(cur_labels)
+            true_preds.append(cur_preds)
         return {
-            "accuracy": accuracy_score(labels_clean, preds_clean),
-            "precision": precision_score(labels_clean, preds_clean),
-            "recall": recall_score(labels_clean, preds_clean),
-            "f1": f1_score(labels_clean, preds_clean)
+            "accuracy": accuracy_score(true_labels, true_preds),
+            "precision": precision_score(true_labels, true_preds),
+            "recall": recall_score(true_labels, true_preds),
+            "f1": f1_score(true_labels, true_preds),
         }
 
     trainer = Trainer(
@@ -114,7 +114,7 @@ def run_argument_extraction(config, tokenizer):
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["test"],
         data_collator=DataCollatorForTokenClassification(tokenizer),
-        compute_metrics=compute_metrics
+        compute_metrics=compute_arg_metrics
     )
 
     trainer.train()

@@ -65,23 +65,23 @@ def run_trigger_identification(config, tokenizer):
         logging_dir=f"{config['output_dir']}/logs"
     )
 
-    def compute_metrics(p):
-        preds = torch.argmax(torch.tensor(p.predictions), axis=2)
-        labels = p.label_ids
-        preds, labels_ = [], []
-        for p_seq, l_seq in zip(preds, labels):
-            p_tags, l_tags = [], []
-            for p_i, l_i in zip(p_seq, l_seq):
-                if l_i != -100:
-                    p_tags.append(id2label[p_i.item()])
-                    l_tags.append(id2label[l_i])
-            preds.append(p_tags)
-            labels_.append(l_tags)
+    def compute_metrics(eval_preds):
+        predictions, labels = eval_preds
+        preds = torch.argmax(torch.tensor(predictions), axis=2)
+        true_labels, true_preds = [], []
+        for pred, label in zip(preds, labels):
+            cur_labels, cur_preds = [], []
+            for p, l in zip(pred, label):
+                if l != -100:
+                    cur_labels.append(id2label[l.item()])
+                    cur_preds.append(id2label[p.item()])
+            true_labels.append(cur_labels)
+            true_preds.append(cur_preds)
         return {
-            "accuracy": accuracy_score(labels_, preds),
-            "precision": precision_score(labels_, preds),
-            "recall": recall_score(labels_, preds),
-            "f1": f1_score(labels_, preds)
+            "accuracy": accuracy_score(true_labels, true_preds),
+            "precision": precision_score(true_labels, true_preds),
+            "recall": recall_score(true_labels, true_preds),
+            "f1": f1_score(true_labels, true_preds),
         }
 
     trainer = Trainer(
