@@ -1,8 +1,8 @@
+import os
 import json
 import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification, AutoModelForSequenceClassification
 from evaluations.e2e import run
-import os
 from datetime import datetime
 from tabulate import tabulate
 from collections import Counter
