@@ -1,4 +1,5 @@
 import json
+import torch
 from datasets import Dataset
 from transformers import (
     AutoModelForSequenceClassification, TrainingArguments, Trainer
@@ -61,7 +62,8 @@ def run_trigger_classification(config, tokenizer):
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["batch_size"],
         learning_rate=config["lr"],
-        logging_dir=f"{config['output_dir']}/logs"
+        logging_dir=f"{config['output_dir']}/logs",
+        push_to_hub=config["push_to_hub"]
     )
 
     def compute_metrics(eval_pred):
@@ -82,3 +84,31 @@ def run_trigger_classification(config, tokenizer):
     trainer.save_model()
 
     return trainer.evaluate()
+
+def predict_event_types(trigger_results, config, tokenizer):
+    from transformers import AutoModelForSequenceClassification
+    import torch.nn.functional as F
+
+    model = AutoModelForSequenceClassification.from_pretrained(
+        f"{config['output_dir']}/trigger_cls"
+    ).eval()
+
+    event_type_preds = []
+
+    for ex in trigger_results:
+        tokens = ex["tokens"]
+        trig = ex["trigger"]
+        if not trig:
+            event_type_preds.append(None)
+            continue
+        marked = tokens.copy()
+        marked.insert(trig[1], "</TRIGGER>")
+        marked.insert(trig[0], "<TRIGGER>")
+        encoding = tokenizer(marked, return_tensors="pt", truncation=True, is_split_into_words=True)
+        with torch.no_grad():
+            logits = model(**encoding).logits
+            pred_id = torch.argmax(logits, dim=1).item()
+            label = model.config.id2label[pred_id]
+        event_type_preds.append(label)
+
+    return event_type_preds

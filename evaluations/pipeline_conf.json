@@ -1,0 +1,10 @@
+{
+    "test_dataset_path": "./data/test.jsonl",
+    "trigger_model": "./caches/trigger_id",
+    "trigger_classifier": "./caches/trigger_cls",
+    "argument_model": "./caches/arg_extraction",
+    "output_dir": "./outputs",
+    "threshold": 0.5,
+    "matching": "strict"
+  }
+  

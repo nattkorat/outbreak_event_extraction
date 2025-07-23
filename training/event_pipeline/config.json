@@ -1,9 +1,10 @@
 {
     "model_name_or_path": "xlm-roberta-base",
-    "dataset_path": "../data/khmernews_inferent_gemini_transformed.jsonl",
-    "output_dir": "./output",
+    "dataset_path": "./data/khmernews_inferent_gemini_transformed.jsonl",
+    "output_dir": "./caches",
     "batch_size": 16,
-    "num_train_epochs": 3,
+    "num_train_epochs": 5,
     "lr": 2e-5,
-    "tasks": ["trigger_id", "trigger_cls", "arg_extraction"]
-  } 
+    "tasks": ["trigger_id", "trigger_cls", "arg_extraction"],
+    "push_to_hub": true
+  }

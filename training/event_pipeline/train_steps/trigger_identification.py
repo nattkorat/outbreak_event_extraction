@@ -62,7 +62,8 @@ def run_trigger_identification(config, tokenizer):
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["batch_size"],
         learning_rate=config["lr"],
-        logging_dir=f"{config['output_dir']}/logs"
+        logging_dir=f"{config['output_dir']}/logs",
+        push_to_hub=config["push_to_hub"]
     )
 
     def compute_metrics(eval_preds):
@@ -98,3 +99,40 @@ def run_trigger_identification(config, tokenizer):
     trainer.save_model()
 
     return trainer.evaluate()
+
+def predict_triggers(data, config, tokenizer):
+    from transformers import AutoModelForTokenClassification
+
+    label_list = ["O", "B-TRIGGER", "I-TRIGGER"]
+    id2label = {i: l for i, l in enumerate(label_list)}
+
+    model = AutoModelForTokenClassification.from_pretrained(
+        f"{config['output_dir']}/trigger_id"
+    ).eval()
+
+    results = []
+
+    for example in data:
+        encoding = tokenizer(example["tokens"], is_split_into_words=True, return_tensors="pt", truncation=True)
+        with torch.no_grad():
+            output = model(**encoding)
+        preds = torch.argmax(output.logits, dim=2).squeeze().tolist()
+        word_ids = encoding.word_ids()[0]
+
+        trigger_span = None
+        for idx, wid in enumerate(word_ids):
+            if wid is None:
+                continue
+            label = id2label[preds[idx]]
+            if label == "B-TRIGGER":
+                trigger_span = [wid, wid + 1]
+            elif label.startswith("I-TRIGGER") and trigger_span:
+                trigger_span[1] = wid + 1
+
+        results.append({
+            "tokens": example["tokens"],
+            "trigger": trigger_span
+        })
+
+    return results
+

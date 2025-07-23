@@ -85,7 +85,8 @@ def run_argument_extraction(config, tokenizer):
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["batch_size"],
         learning_rate=config["lr"],
-        logging_dir=f"{config['output_dir']}/logs"
+        logging_dir=f"{config['output_dir']}/logs",
+        push_to_hub=config["push_to_hub"]
     )
 
     def compute_arg_metrics(eval_preds):
@@ -121,3 +122,68 @@ def run_argument_extraction(config, tokenizer):
     trainer.save_model()
 
     return trainer.evaluate()
+
+def predict_arguments(trigger_results, event_types, config, tokenizer):
+    model = AutoModelForTokenClassification.from_pretrained(
+        f"{config['output_dir']}/arg_extraction"
+    ).eval()
+
+    label_map = model.config.id2label
+    all_outputs = []
+
+    for ex, ev_type in zip(trigger_results, event_types):
+        tokens = ex["tokens"]
+        trig = ex["trigger"]
+        if not trig or not ev_type:
+            all_outputs.append({
+                "tokens": tokens,
+                "trigger": trig,
+                "event_type": ev_type,
+                "arguments": []
+            })
+            continue
+
+        marked = tokens.copy()
+        marked.insert(trig[1], "</TRIGGER>")
+        marked.insert(trig[0], "<TRIGGER>")
+
+        encoding = tokenizer(marked, return_tensors="pt", truncation=True, is_split_into_words=True)
+        with torch.no_grad():
+            logits = model(**encoding).logits
+            pred_ids = torch.argmax(logits, dim=2).squeeze().tolist()
+        word_ids = encoding.word_ids()[0]
+
+        args = []
+        i = 0
+        while i < len(pred_ids):
+            wid = word_ids[i]
+            if wid is None:
+                i += 1
+                continue
+            label = label_map[str(pred_ids[i])]
+            if label.startswith("B-"):
+                role = label[2:]
+                start = wid
+                end = start + 1
+                j = i + 1
+                while j < len(pred_ids):
+                    next_wid = word_ids[j]
+                    next_label = label_map[str(pred_ids[j])]
+                    if next_label == f"I-{role}" and next_wid == end:
+                        end += 1
+                        j += 1
+                    else:
+                        break
+                args.append({"role": role, "start": start, "end": end})
+                i = j
+            else:
+                i += 1
+
+        all_outputs.append({
+            "tokens": tokens,
+            "trigger": trig,
+            "event_type": ev_type,
+            "arguments": args
+        })
+
+    return all_outputs

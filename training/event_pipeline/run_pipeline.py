@@ -1,4 +1,4 @@
-from pipeline import TrainPipeline
+from training.event_pipeline.pipeline import TrainPipeline
 import argparse
 
 if __name__ == "__main__":

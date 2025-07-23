@@ -39,3 +39,4 @@ logs/
 # Inference and training outputs
 outputs/
 logs/
+caches/
