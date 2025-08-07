@@ -2,9 +2,8 @@ import os
 from google import genai
 from dotenv import load_dotenv
 
-env_path = os.path.join(os.path.dirname(__file__), '.env')
-# load the env file
-load_dotenv(dotenv_path=env_path)
+load_dotenv()
+
 client = genai.Client(api_key=os.getenv("GEMINI_KEY"))
 
 def chat_with_gemini2_5(text: str) -> str:

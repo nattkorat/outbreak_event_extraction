@@ -53,91 +53,51 @@ def json_string_response_parser(text: str) -> dict:
     except json.JSONDecodeError as e:
         print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Found a possible JSON block but failed to parse: {e}")
 
+def data_transform(data: dict):
+    """
+    Transform the parsed JSON data into a structured format.
+    Args:
+        data (dict): Parsed JSON data.
+    Returns:
+        list: Transformed data in a structured format.
+    """
+    transformed_data = []
+    for key, value in data.items():
+      for e in value:
+        temp = {
+            "event_type": key,
+            "trigger": e['trigger'],
+            "arguments": []
+        }
+        for k, val in e['arguments'].items():
+            temp["arguments"].append({
+                "role": k,
+                "text": val
+            })
+        transformed_data.append(temp)
+    return transformed_data
+
 
 if __name__ == "__main__":
     # Example usage
     response = '''After carefully reading the news article, I have extracted the relevant information for each event type. Here is the output in JSON format:
 
 {
-  "Infect": [
-    {
-      "infected": "កូនជាតិភាគតិច",
-      "disease": "ជំងឺរលាក​សួត",
-      "place": "ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
-      "time": "Not Mentioned",
-      "value": "1,000 នាក់",
-      "information-source": "មណ្ឌលភាពយន្ត"
-    },
-    {
-      "infected": "គ្រូពេទ្យសាកលវិទ្យាល័យ",
-      "disease": "ជំងឺរលាក​សួត",
-      "place": "សាកលវិទ្យាល័យភ្នំពេញ",
-      "time": "Not Mentioned",
-      "value": "500 នាក់",
-      "information-source": "មណ្ឌលភាពយន្ត"
-    }
-  ],
-  "Spread": [
-    {
-      "population": "ប្រជាជន​ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
-      "disease": "ជំងឺរលាក​សួត",
-      "place": "ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
-      "time": "ថ្ងៃ​ទី 15 ខែ ​មករា​ឆ្នាំ 2023",
-      "value": "10,000 នាក់",
-      "information-source": "មណ្ឌលភាពយន្ត"
-    }
-  ],
-  "Symptom": [
-    {
-      "person": "គ្រូពេទ្យសាកលវិទ្យាល័យ",
-      "symptom": "បន្ថយចំណាត់ហោយទាមរក្សា",
-      "disease": "ជំងឺរលាក​សួត",
-      "place": "សាកលវិទ្យាល័យភ្នំពេញ",
-      "time": "ថ្ងៃ​ទី 10 ខែ ​មករា​ឆ្នាំ 2023",
-      "duration": "5 សប្តាហ៍"
-    }
-  ],
-  "Prevent": [
-    {
-      "agent": "ព្រះរាជច្បាប់ក្លារី",
-      "disease": "ជំងឺរលាក​សួត",
-      "means": "បញ្ហា វិធីយុទ្ធនាំ",
-      "information-source": "ព្រះរាជច្បាប់ក្លារី"
-    }
-  ],
-  "Control": [
-    {
-      "authority": "សមាគមប្រឹក្សា​អន្តរជាតិ​រួមទាំង ​ព្រះរាជច្បាប់​ក្លារី",
-      "disease": "ជំងឺរលាក​សួត",
-      "means": "អារម្មណ៍ ហេដ្ឋា",
-      "place": "ភ្នំពេញ",
-      "time": "ថ្ងៃ​ទី 20 ខែ ​មករា​ឆ្នាំ 2023",
-      "information-source": "សារធាតុអន្តរជាតិ"
-    }
-  ],
-  "Cure": [
-    {
-      "cured": "គ្រូពេទ្យសាកលវិទ្យាល័យ",
-      "disease": "ជំងឺរលាក​សួត",
-      "means": "គ្រុន",
-      "place": "សាកលវិទ្យាល័យភ្នំពេញ",
-      "time": "ថ្ងៃ​ទី 25 ខែ ​មករា​ឆ្នាំ 2023",
-      "value": "500 នាក់",
-      "information-source": "សារធាតុអន្តរជាតិ"
-    }
-  ],
-  "Death": [
-    {
-      "dead": "មនុស្សដូចជា​កូន​ជាតិភាគតិច",
-      "disease": "ជំងឺរលាក​សួត",
-      "place": "ផ្សេងទៀតនៅក្នុងប្រទេសដាំងីឡែន",
-      "time": "ថ្ងៃ​ទី 20 ខែ ​មករា​ឆ្នាំ 2023",
-      "value": "100 នាក់",
-      "information-source": "មណ្ឌលភាពយន្ត"
-    }
-  ]
+    "Cure": [
+      {
+        "trigger": "discharged",
+        "arguments": {
+          "cured": "Eleven COVID-19 patients",
+          "disease": "COVID-19",
+          "place": "Oyo",
+          "value": "11",
+          "information-source": "(url)"
+        }
+      }
+    ]
 }
 
 ```'''
     parsed_response = json_string_response_parser(response)
-    print(parsed_response)  # Output: {'key': 'value', 'number': 42}
+    transforming = data_transform(parsed_response)
+    print(transforming)  # Output: {'key': 'value', 'number': 42}
